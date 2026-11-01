@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>{% block title %}SPK Fuzzy AHP{% endblock %}</title>
+
+  <link rel="stylesheet"
+  href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=professional2">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="brand-logo">
+        <div class="shield">🛡️</div>
+        <div>
+          <h2>SIPAKAR</h2>
+          <small>Sistem Prioritas Keamanan</small>
+        </div>
+      </div>
+      <div class="user-card">
+        {% if logged_in() %}
+          <div class="user-name">{{ current_user() }}</div>
+          <div class="user-sub">Sesi aktif</div>
+        {% else %}
+          <div class="user-name">Guest</div>
+          <div class="user-sub">Silakan login</div>
+        {% endif %}
+      </div>
+      <nav>
+        {% if logged_in() %}
+          <a href="{{ url_for('beranda') }}">
+            <i class="fas fa-home"></i> Beranda
+          </a>
+          {% if state_flags().experts|length > 0 %}
+          <a href="{{ url_for('kriteria') }}">
+              <i class="fas fa-layer-group"></i>
+              Input Kriteria
+          </a>
+          {% else %}
+          <a href="#"
+            class="disabled-link"
+            onclick="alert('Silakan pilih jumlah expert terlebih dahulu melalui tombol Mulai Penilaian.')">
+              <i class="fas fa-layer-group"></i>
+              Input Kriteria
+          </a>
+          {% endif %}
+          {% if state_flags().locked_criteria %}<a href="{{ url_for('alternatif') }}">
+            <i class="fas fa-list-check"></i> Input Alternatif
+          </a>{% endif %}
+          {% if state_flags().locked_criteria and state_flags().locked_alternatives %}<a href="{{ url_for('hasil') }}">
+            <i class="fas fa-chart-column"></i> Hasil Analisis
+          </a>{% endif %}
+          {% if state_flags().locked_criteria and state_flags().locked_alternatives %}<a href="{{ url_for('laporan') }}">
+            <i class="fas fa-file-lines"></i> Laporan
+          </a>{% endif %}
+          <a href="{{ url_for('riwayat') }}">
+            <i class="fas fa-clock-rotate-left"></i> Riwayat
+          </a>
+          <a href="{{ url_for('logout') }}">
+            <i class="fas fa-right-from-bracket"></i> Logout
+          </a>
+        {% else %}
+          <a href="{{ url_for('login') }}">🔐 Login</a>
+          <a href="{{ url_for('register') }}">📝 Daftar</a>
+        {% endif %}
+      </nav>
+      <div class="side-foot">© 2026 • SPK Keamanan Informasi</div>
+    </aside>
+
+    <main class="content">
+      <div class="topbar">Prioritas Kontrol Keamanan{% if logged_in() %} • {{ current_user() }}{% endif %}</div>
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          <div class="alerts">
+            {% for category, message in messages %}
+              <div class="alert {{ category }}">{{ message }}</div>
+            {% endfor %}
+          </div>
+        {% endif %}
+      {% endwith %}
+      {% block content %}{% endblock %}
+    </main>
+  </div>
+  <script src="{{ url_for('static', filename='app.js') }}?v=professional2"></script>
+</body>
+</html>

@@ -1,0 +1,169 @@
+{% extends "base.html" %}
+{% block title %}Input Alternatif{% endblock %}
+{% block content %}
+<section class="card">
+  <h1>Input Alternatif Kontrol Keamanan</h1>
+  <p class="sub">Pilih kriteria, lakukan perbandingan alternatif untuk kriteria tersebut, lalu simpan. Ulangi sampai semua kriteria selesai.</p>
+  <p><b>Progress:</b> {{ done_count }}/{{ kc|length }} kriteria sudah disimpan.</p>
+</section>
+
+<div class="two-col mt">
+  <section class="card">
+    <h2>Daftar Alternatif</h2>
+    <form method="post" class="inline-form">
+      <input type="hidden" name="selected_k" value="{{ selected_k }}">
+      <label>Kode<input type="text" name="kode_baru" value="A{{ state.alternatif|length + 1 }}" {% if state.locked_alternatives %}disabled{% endif %}></label>
+      <label>Nama Kontrol Keamanan<input type="text" name="nama_baru" placeholder="Contoh: Multi-Factor Authentication" {% if state.locked_alternatives %}disabled{% endif %}></label>
+      <button class="btn primary" name="action" value="add_alt" {% if state.locked_alternatives %}disabled{% endif %}>Tambah</button>
+    </form>
+
+    <table class="data-table mt">
+      <thead><tr><th>Kode</th><th>Nama Kontrol Keamanan</th></tr></thead>
+      <tbody>{% for a in state.alternatif %}<tr><td>{{ a.kode }}</td><td>{{ a.nama }}</td></tr>{% endfor %}</tbody>
+    </table>
+
+<div class="inline-form mt">
+        <label>Hapus Alternatif
+          <select name="del_code" {% if state.locked_alternatives %}disabled{% endif %}>
+            <option value="-">-</option>
+            {% for alt in state.alternatif %}<option value="{{ alt.kode }}">{{ alt.kode }}</option>{% endfor %}
+          </select>
+        </label>
+        <button class="btn danger" name="action" value="delete_alt" {% if state.locked_alternatives %}disabled{% endif %}>Hapus</button>
+      </div>
+    <div class="note mt">Jika jumlah alternatif berubah, perbandingan untuk semua kriteria harus diisi ulang.</div>
+  </section>
+
+  <section class="card">
+    <h2>Matriks Perbandingan Alternatif</h2>
+    <form method="get" class="inline-form">
+      <label>Kriteria
+        <select name="k" onchange="this.form.submit()">
+          {% for k in kc %}<option value="{{ k }}" {% if k == selected_k %}selected{% endif %}>{{ k }}</option>{% endfor %}
+        </select>
+      </label>
+    </form>
+    <p>Status kriteria <b>{{ selected_k }}</b>: {% if state.alt_done.get(selected_k) %}<span class="ok">Sudah disimpan</span>{% else %}<span class="bad">Belum disimpan</span>{% endif %}</p>
+
+    {% if ac|length < 2 %}
+      <div class="alert warning">Tambahkan minimal 2 alternatif.</div>
+    {% else %}
+      <form method="post" class="js-live-matrix-form" data-items='{{ ac|tojson }}' data-matrix-target="alternative-matrix-body" data-consistency-target="alternative-consistency">
+        <input type="hidden" name="selected_k" value="{{ selected_k }}">
+      {% if state.experts_count == 1 %}  
+        {% for key, val in state.pair_alternatif.get(selected_k, {}).items() %}
+          {% set a, b = key.split('|') %}
+          <div class="pair-card">
+            <strong>{{ a }} vs {{ b }}</strong>
+            <div class="pair-grid">
+              <label>Arah
+                <select name="winner_{{ key }}">
+                  <option value="{{ a }}" {% if val[0] == a %}selected{% endif %}>{{ a }} lebih</option>
+                  <option value="{{ b }}" {% if val[0] == b %}selected{% endif %}>{{ b }} lebih</option>
+                </select>
+              </label>
+              <label>Skala
+                <select name="scale_{{ key }}" >
+                  {% for i in range(1,10) %}
+                    <option value="{{ i }}" {% if val[1] == i %}selected{% endif %}>{{ saaty_label[i] }}</option>
+                  {% endfor %}
+                </select>
+              </label>
+            </div>
+          </div>
+        {% endfor %}
+
+      {% else %}
+
+        {% for key, val in state.pair_alternatif.get(selected_k, {}).items() %}
+
+            {% set a,b = key.split('|') %}
+
+            <div class="pair-card">
+
+                <h4>{{ a }} vs {{ b }}</h4>
+
+                {% for i in range(state.experts_count) %}
+
+                    <div class="experts-box">
+
+                        <h5>Experts {{ i+1 }}</h5>
+
+                        <div class="pair-grid">
+
+                            <label>Arah
+
+                                <select
+                                    name="winner_{{ key }}_{{ i }}">
+
+                                    <option value="{{ a }}"{% if val[i][0]==a %}selected{% endif %}>
+                                    {{ a }} lebih
+                                    </option>
+
+                                    <option value="{{ b }}" {% if val[i][0]==b %}selected{% endif %}>
+                                    {{ b }} lebih
+                                    </option>
+
+                                </select>
+
+                            </label>
+
+                            <label>Skala
+
+                                <select
+                                    name="scale_{{ key }}_{{ i }}">
+
+                                    {% for s in range(1,10) %}
+
+                                    <option value="{{ s }}" {% if val[i][1]==s %}selected{% endif %}>
+                                        {{ saaty_label[s] }}
+                                    </option>
+
+                                    {% endfor %}
+
+                                </select>
+
+                            </label>
+
+                        </div>
+
+                    </div>
+
+                {% endfor %}
+
+            </div>
+
+        {% endfor %}
+
+    {% endif %}  
+
+        <h3>Matriks Alternatif</h3>
+        <table class="data-table compact">
+          <thead><tr><th></th>{% for c in ac %}<th>{{ c }}</th>{% endfor %}</tr></thead>
+          <tbody id="alternative-matrix-body">{% for row in matrix %}<tr>{% for cell in row %}<td>{{ cell }}</td>{% endfor %}</tr>{% endfor %}</tbody>
+        </table>
+        <p id="alternative-consistency"><b>Uji Konsistensi:</b> λmax={{ '%.4f'|format(lmax) }} | CI={{ '%.4f'|format(ci) }} | CR={{ '%.4f'|format(cr) }} <span class="muted">(Valid jika ≤ 0,10)</span></p>
+        <div class="actions-grid">
+
+        <button class="btn"
+                name="action"
+                value="reset_selected">
+            Reset
+        </button>
+
+        <button class="btn success"
+                name="action"
+                value="save_next">
+            Simpan 
+        </button>
+
+    </div>
+      </form>
+    {% endif %}
+  </section>
+</div>
+
+<div class="mt">
+  <a class="btn primary {% if not state.locked_alternatives %}disabled-link{% endif %}" href="{{ url_for('hasil') }}">Lanjut ke Hasil Analisis →</a>
+</div>
+{% endblock %}

@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block title %}Riwayat{% endblock %}
+{% block content %}
+<section class="card">
+  <h1>Riwayat Pekerjaan</h1>
+  <p class="sub">Berisi riwayat input kriteria, alternatif, hasil analisis, dan laporan yang sudah pernah dikerjakan.</p>
+</section>
+
+<section class="card mt">
+  {% if not records %}
+    <h2>Belum ada riwayat</h2>
+    <p>Silakan isi kriteria dan alternatif terlebih dahulu.</p>
+    <a class="btn primary" href="{{ url_for('kriteria') }}">Isi Kriteria →</a>
+  {% else %}
+    <h2>Daftar Riwayat</h2>
+    <table class="data-table">
+      <thead><tr><th>ID</th><th>Waktu UTC</th><th>Aktivitas</th><th>Aksi</th></tr></thead>
+      <tbody>
+        {% for row in records %}
+        <tr>
+            <td>{{ row.id }}</td>
+            <td>{{ row.ts }}</td>
+            <td>{{ row.event }}</td>
+
+            <td style="white-space:nowrap">
+
+                <a class="btn small"
+                  href="{{ url_for('riwayat_detail', hist_id=row.id) }}">
+                    Detail
+                </a>
+
+                {% if row.event == "Buka Hasil Analisis" %}
+                    <a class="btn success small"
+                      href="{{ url_for('riwayat_pdf', hist_id=row.id) }}">
+                        PDF
+                    </a>
+                {% endif %}
+
+            </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% endif %}
+</section>
+{% endblock %}

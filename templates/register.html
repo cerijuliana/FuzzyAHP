@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block title %}Daftar{% endblock %}
+{% block content %}
+<section class="card small-card">
+  <h1 class="auth-title">Daftar Akun</h1>
+  <p class="sub">Buat akun untuk menyimpan data pekerjaan, riwayat analisis, dan laporan prioritas kontrol keamanan.</p>
+  <div class="auth-card-note">Password dapat ditampilkan atau disembunyikan menggunakan tombol <strong>Lihat</strong> di sisi kanan kolom.</div>
+  <form method="post" class="form-stack mt">
+    <label>Username<input type="text" name="username" placeholder="minimal 3 karakter" required></label>
+    <label>Password
+      <div class="password-wrap">
+        <input type="password" name="password" placeholder="minimal 6 karakter" required>
+        <button type="button" class="toggle-password" aria-label="Tampilkan password">Lihat</button>
+      </div>
+    </label>
+    <label>Ulangi Password
+      <div class="password-wrap">
+        <input type="password" name="password2" placeholder="ulangi password" required>
+        <button type="button" class="toggle-password" aria-label="Tampilkan password">Lihat</button>
+      </div>
+    </label>
+    <button class="btn primary" type="submit">Daftar</button>
+  </form>
+  <div class="auth-footer mt">
+    <span class="muted">Sudah punya akun?</span>
+    <a class="btn" href="{{ url_for('login') }}">Kembali ke Login →</a>
+  </div>
+</section>
+{% endblock %}

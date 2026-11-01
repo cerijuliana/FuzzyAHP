@@ -1,0 +1,308 @@
+{% extends "base.html" %}
+{% block title %}Laporan Lengkap{% endblock %}
+
+{% block content %}
+
+<section class="card">
+    <h1>Laporan Lengkap Fuzzy AHP</h1>
+    <p>
+        Seluruh proses perhitungan ditampilkan mulai dari matriks
+        perbandingan, normalisasi, perhitungan fuzzy, sintesis global,
+        hingga rekomendasi akhir.
+    </p>
+
+```
+<a class="btn primary"
+   href="{{ url_for('download_laporan') }}">
+   Download PDF Lengkap
+</a>
+```
+
+</section>
+
+<!-- ================================================= -->
+
+<!-- KRITERIA -->
+
+<!-- ================================================= -->
+
+<section class="card mt">
+
+<h2>1. Matriks Perbandingan Kriteria</h2>
+
+<table>
+<tr>
+<th>Kriteria</th>
+{% for k in r.k_codes %}
+<th>{{ k }}</th>
+{% endfor %}
+</tr>
+
+{% for i,row in enumerate(r.M_k) %}
+
+<tr>
+<td>{{ r.k_codes[i] }}</td>
+{% for v in row %}
+<td>{{ "%.4f"|format(v) }}</td>
+{% endfor %}
+</tr>
+{% endfor %}
+</table>
+
+</section>
+
+<!-- ================================================= -->
+
+<section class="card mt">
+
+<h2>2. Matriks Normalisasi Kriteria</h2>
+
+<table>
+<tr>
+<th>Kriteria</th>
+{% for k in r.k_codes %}
+<th>{{ k }}</th>
+{% endfor %}
+</tr>
+
+{% for i,row in enumerate(r.norm_k) %}
+
+<tr>
+<td>{{ r.k_codes[i] }}</td>
+{% for v in row %}
+<td>{{ "%.6f"|format(v) }}</td>
+{% endfor %}
+</tr>
+{% endfor %}
+</table>
+
+</section>
+
+<!-- ================================================= -->
+
+<section class="card mt">
+
+<h2>3. Konsistensi Kriteria</h2>
+
+<ul>
+<li>Lambda Max : {{ "%.6f"|format(r.CR_k.lambda_max) }}</li>
+<li>CI : {{ "%.6f"|format(r.CR_k.CI) }}</li>
+<li>CR : {{ "%.6f"|format(r.CR_k.CR) }}</li>
+</ul>
+
+</section>
+
+<!-- ================================================= -->
+
+<section class="card mt">
+
+<h2>4. Bobot Kriteria Fuzzy AHP</h2>
+
+<table>
+<tr>
+<th>Kriteria</th>
+<th>Bobot</th>
+</tr>
+
+{% for i,k in enumerate(r.k_codes) %}
+
+<tr>
+<td>{{ k }}</td>
+<td>{{ "%.6f"|format(r.w_k[i]) }}</td>
+</tr>
+{% endfor %}
+
+</table>
+
+</section>
+
+<!-- ================================================= -->
+
+<section class="card mt">
+
+<h2>5. Detail Fuzzy Kriteria</h2>
+
+<h3>Row Sum</h3>
+
+<table>
+<tr>
+<th>Kriteria</th>
+<th>L</th>
+<th>M</th>
+<th>U</th>
+</tr>
+
+{% for i,row in enumerate(r.fuzzy_detail_k.row_sums) %}
+
+<tr>
+<td>{{ r.k_codes[i] }}</td>
+<td>{{ "%.6f"|format(row[0]) }}</td>
+<td>{{ "%.6f"|format(row[1]) }}</td>
+<td>{{ "%.6f"|format(row[2]) }}</td>
+</tr>
+{% endfor %}
+</table>
+
+<h3>Total Fuzzy</h3>
+
+<p>
+(
+{{ "%.6f"|format(r.fuzzy_detail_k.total_sum[0]) }},
+{{ "%.6f"|format(r.fuzzy_detail_k.total_sum[1]) }},
+{{ "%.6f"|format(r.fuzzy_detail_k.total_sum[2]) }}
+)
+</p>
+
+<h3>Inverse Total</h3>
+
+<p>
+(
+{{ "%.6f"|format(r.fuzzy_detail_k.total_inv[0]) }},
+{{ "%.6f"|format(r.fuzzy_detail_k.total_inv[1]) }},
+{{ "%.6f"|format(r.fuzzy_detail_k.total_inv[2]) }}
+)
+</p>
+
+</section>
+
+<!-- ================================================= -->
+
+<!-- ALTERNATIF -->
+
+<!-- ================================================= -->
+
+{% for k in r.k_codes %}
+
+<section class="card mt">
+
+<h2>Alternatif untuk {{ k }}</h2>
+
+<h3>Matriks Perbandingan</h3>
+
+<table>
+
+<tr>
+<th>Alternatif</th>
+
+{% for a in r.a_codes %}
+
+<th>{{ a }}</th>
+{% endfor %}
+</tr>
+
+{% for i,row in enumerate(r.M_alt_per_k[k]) %}
+
+<tr>
+<td>{{ r.a_codes[i] }}</td>
+
+{% for v in row %}
+
+<td>{{ "%.4f"|format(v) }}</td>
+{% endfor %}
+</tr>
+{% endfor %}
+</table>
+
+<h3>Konsistensi</h3>
+
+<ul>
+<li>Lambda Max : {{ "%.6f"|format(r.CR_alt[k].lambda_max) }}</li>
+<li>CI : {{ "%.6f"|format(r.CR_alt[k].CI) }}</li>
+<li>CR : {{ "%.6f"|format(r.CR_alt[k].CR) }}</li>
+</ul>
+
+<h3>Bobot Alternatif</h3>
+
+<table>
+
+<tr>
+<th>Alternatif</th>
+<th>Bobot</th>
+</tr>
+
+{% for i,a in enumerate(r.a_codes) %}
+
+<tr>
+<td>{{ a }}</td>
+<td>{{ "%.6f"|format(r.w_alt_per_k[k][i]) }}</td>
+</tr>
+{% endfor %}
+
+</table>
+
+</section>
+
+{% endfor %}
+
+<!-- ================================================= -->
+
+<!-- GLOBAL -->
+
+<!-- ================================================= -->
+
+<section class="card mt">
+
+<h2>6. Bobot Global</h2>
+
+<table>
+
+<tr>
+<th>Alternatif</th>
+<th>Bobot Global</th>
+<th>Prioritas</th>
+</tr>
+
+{% for i,a in enumerate(r.a_codes) %}
+
+<tr>
+<td>{{ a }}</td>
+<td>{{ "%.6f"|format(r.W[i]) }}</td>
+<td>{{ r.priority_level[i] }}</td>
+</tr>
+{% endfor %}
+
+</table>
+
+</section>
+
+<!-- ================================================= -->
+
+<section class="card mt">
+
+<h2>7. Ranking Akhir</h2>
+
+<table>
+
+<tr>
+<th>Rank</th>
+<th>Alternatif</th>
+<th>Skor</th>
+</tr>
+
+{% for idx in r.order %}
+
+<tr>
+<td>{{ loop.index }}</td>
+<td>{{ r.a_codes[idx] }}</td>
+<td>{{ "%.6f"|format(r.W[idx]) }}</td>
+</tr>
+
+{% endfor %}
+
+</table>
+
+</section>
+
+<!-- ================================================= -->
+
+<section class="card mt">
+
+<h2>8. Kesimpulan</h2>
+
+<p>
+{{ r.ai_recommendation }}
+</p>
+
+</section>
+
+{% endblock %}

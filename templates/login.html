@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block title %}Login{% endblock %}
+{% block content %}
+<section class="card small-card">
+  <h1 class="auth-title">Login</h1>
+  <p class="sub">Masuk untuk mengelola data kriteria, alternatif, riwayat analisis, dan laporan hasil perhitungan.</p>
+  <div class="auth-card-note">Gunakan akun yang sudah terdaftar untuk melanjutkan proses prioritisasi kontrol keamanan.</div>
+  <form method="post" class="form-stack mt">
+    <label>Username<input type="text" name="username" placeholder="contoh: admin" required></label>
+    <label>Password
+      <div class="password-wrap">
+        <input type="password" name="password" placeholder="minimal 6 karakter" required>
+        <button type="button" class="toggle-password" aria-label="Tampilkan password">Lihat</button>
+      </div>
+    </label>
+    <button class="btn primary" type="submit">Login</button>
+  </form>
+  <div class="auth-footer mt">
+    <span class="muted">Belum punya akun?</span>
+    <a class="btn" href="{{ url_for('register') }}">Daftar Akun →</a>
+  </div>
+</section>
+{% endblock %}

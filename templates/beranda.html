@@ -1,0 +1,193 @@
+{% extends "base.html" %}
+{% block title %}Beranda{% endblock %}
+{% block content %}
+
+<section class="hero card center">
+  <h1>Sistem Pendukung Keputusan<br>Prioritas Kontrol Keamanan</h1>
+
+  <span class="badge">
+    METODE FUZZY ANALYTICAL HIERARCHY PROCESS
+  </span>
+
+  <p class="sub wide">
+    Platform untuk menentukan prioritas kontrol keamanan secara objektif melalui
+    perbandingan berpasangan (AHP), Fuzzy AHP, serta rekomendasi level prioritas.
+  </p>
+
+  <div class="note">
+    Mulai dari menu <b>Mulai Penilaian</b> untuk mengisi data.
+  </div>
+
+</section>
+
+<!-- ======================= -->
+
+<div class="card mt">
+
+    <div class="home-actions">
+
+        <button
+            type="button"
+            class="btn primary"
+            onclick="openExpertsModal()">
+
+            Mulai Penilaian →
+
+        </button>
+
+        <a
+            class="btn"
+            href="{{ url_for('riwayat') }}">
+
+            Lihat Riwayat →
+
+        </a>
+
+    </div>
+
+    <form
+        class="home-reset"
+        method="post"
+        action="{{ url_for('reset') }}">
+
+        <button
+            class="btn danger reset-btn">
+
+            Reset Semua Data Kerja
+
+        </button>
+
+    </form>
+
+</div>
+
+        <div id="expertsModal" class="modal">
+
+            <div class="modal-content">
+
+                <h2>Pilih Jumlah Experts</h2>
+
+                <form method="POST"
+                    action="{{ url_for('set_experts') }}">
+
+                    <label>Jumlah Experts</label>
+
+                    <select
+                        id="experts_count"
+                        name="experts_count"
+                        onchange="generateExpertsName()">
+
+                        {% for i in range(1,6) %}
+
+                        <option
+                            value="{{ i }}"
+                            {% if state.experts_count == i %}selected{% endif %}>
+
+                            {{ i }} Experts
+
+                        </option>
+
+                        {% endfor %}
+
+                    </select>
+
+                    <br><br>
+
+                    <div id="experts-name-area"></div>
+
+                    <div class="modal-footer">
+
+                        <button
+                            class="btn primary"
+                            type="submit">
+
+                            Simpan
+
+                        </button>
+
+                        <button
+                            type="button"
+                            class="btn danger"
+                            onclick="closeExpertsModal()">
+
+                            Batal
+
+                        </button>
+
+                    </div>
+
+                </form>
+
+            </div>
+
+        </div>
+
+<script>
+
+function openExpertsModal(){
+
+    document.getElementById("expertsModal").style.display = "block";
+
+    generateExpertsName();
+
+}
+
+function closeExpertsModal(){
+
+    document.getElementById("expertsModal").style.display = "none";
+
+}
+
+function generateExpertsName(){
+
+    let jumlah = document.getElementById("experts_count").value;
+
+    let area = document.getElementById("experts-name-area");
+
+    area.innerHTML = "";
+
+    for(let i=0;i<jumlah;i++){
+
+        area.innerHTML += `
+
+        <div class="experts-card">
+
+            <h4>Experts ${i+1}</h4>
+
+            <label>Nama Experts</label>
+
+            <input
+                type="text"
+                name="experts_name_${i}"
+                class="form-control"
+                placeholder="Nama Experts">
+
+            <label>Jabatan</label>
+
+            <input
+                type="text"
+                name="experts_job_${i}"
+                class="form-control"
+                placeholder="Contoh: Kepala Divisi IT">
+
+            <label>Instansi</label>
+
+            <input
+                type="text"
+                name="experts_instansi_${i}"
+                class="form-control"
+                placeholder="Contoh: Dinas Kominfo">
+
+            <hr>
+
+        </div>
+
+        `;
+
+    }
+
+}
+
+</script>
+
+{% endblock %}

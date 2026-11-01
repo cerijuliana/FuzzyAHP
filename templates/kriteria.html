@@ -1,0 +1,162 @@
+{% extends "base.html" %}
+{% block title %}Input Kriteria{% endblock %}
+{% block content %}
+<section class="card">
+  <h1>Input Kriteria Penilaian</h1>
+  <p class="sub">Definisikan kriteria untuk mengevaluasi alternatif kontrol keamanan. Validasi: CR harus ≤ 0,10.</p>
+</section>
+
+<form method="post" class="js-live-matrix-form" data-items='{{ codes|tojson }}' data-matrix-target="criteria-matrix-body" data-consistency-target="criteria-consistency">
+  <div class="two-col mt">
+    <section class="card">
+      <h2>1. Daftar Kriteria</h2>
+      <div class="inline-form">
+        <label>Kode<input type="text" name="kode_baru" value="K{{ state.kriteria|length + 1 }}" {% if state.locked_criteria %}disabled{% endif %}></label>
+        <label>Nama Kriteria<input type="text" name="nama_baru" placeholder="Contoh: Ketersediaan" {% if state.locked_criteria %}disabled{% endif %}></label>
+        <button class="btn primary" name="action" value="add" {% if state.locked_criteria %}disabled{% endif %}>Tambah</button>
+      </div>
+
+      <table class="data-table mt">
+        <thead><tr><th>Kode</th><th>Nama Kriteria</th></tr></thead>
+        <tbody>
+          {% for k in state.kriteria %}<tr><td>{{ k.kode }}</td><td>{{ k.nama }}</td></tr>{% endfor %}
+        </tbody>
+      </table>
+
+      <div class="inline-form mt">
+        <label>Hapus Kriteria
+          <select name="del_code" {% if state.locked_criteria %}disabled{% endif %}>
+            <option value="-">-</option>
+            {% for k in state.kriteria %}<option value="{{ k.kode }}">{{ k.kode }}</option>{% endfor %}
+          </select>
+        </label>
+        <button class="btn danger" name="action" value="delete" {% if state.locked_criteria %}disabled{% endif %}>Hapus</button>
+      </div>
+
+      {% if state.locked_criteria %}
+        <div class="note success mt">Matriks kriteria sudah dikunci karena CR valid.</div>
+      {% else %}
+        <div class="note mt">Setelah yakin, klik <b>Simpan Matriks</b> untuk uji CR dan mengunci kriteria.</div>
+      {% endif %}
+    </section>
+
+    <section class="card">
+      <h2>2. Matriks Perbandingan Kriteria</h2>
+      <p class="sub">
+      1 = Sama Penting | 2 = Antara 1–3 | 3 = Sedikit Lebih Penting | 4 = Antara 3–5 | 5 = Lebih Penting | 6 = Antara 5–7 | 7 = Sangat Lebih Penting | 8 = Antara 7–9 | 9 = Mutlak Lebih Penting
+      </p>
+      {% if codes|length < 2 %}
+        <div class="alert warning">Tambahkan minimal 2 kriteria.</div>
+      {% else %}
+      {% if state.experts_count == 1 %}
+          {% for key, val in state.pair_kriteria.items() %}
+            {% set a, b = key.split('|') %}
+            <div class="pair-card">
+              <strong>{{ a }} vs {{ b }}</strong>
+              <div class="pair-grid">
+                <label>Arah
+                  <select name="winner_{{ key }}">
+                    <option value="{{ a }}" {% if val[0] == a %}selected{% endif %}>{{ a }} lebih</option>
+                    <option value="{{ b }}" {% if val[0] == b %}selected{% endif %}>{{ b }} lebih</option>
+                  </select>
+                </label>
+                <label>Skala
+                  <select name="scale_{{ key }}">
+                    {% for i in range(1,10) %}
+                      <option value="{{ i }}" {% if val[1] == i %}selected{% endif %}>{{ saaty_label[i] }}</option>
+                    {% endfor %}
+                  </select>
+                </label>
+              </div>
+            </div>
+          {% endfor %}
+
+        {% else %}
+
+          {% for key, val in state.pair_kriteria.items() %}
+
+          {% set a,b = key.split('|') %}
+
+          <div class="pair-card">
+
+              <h4>{{ a }} vs {{ b }}</h4>
+
+              {% for i in range(state.experts_count) %}
+
+              <div class="experts-box">
+
+                  <h5>Experts {{ i+1 }}</h5>
+
+                  <div class="pair-grid">
+
+                      <label>Arah
+
+                          <select
+                              name="winner_{{ key }}_{{ i }}">
+
+                              <option value="{{ a }}" {% if val[i][0]==a %}selected{% endif %}>
+                              {{ a }} lebih
+                              </option>
+
+                              <option value="{{ b }}" {% if val[i][0]==b %}selected{% endif %}>
+                              {{ b }} lebih
+                              </option>
+
+                          </select>
+
+                      </label>
+
+                      <label>Skala
+
+                          <select
+                            name="scale_{{ key }}_{{ i }}">
+
+                              {% for s in range(1,10) %}
+
+                              <option value="{{ s }}" {% if val[i][1]==s %}selected{% endif %}>
+                                  {{ saaty_label[s] }}
+                              </option>
+
+                              {% endfor %}
+
+                          </select>
+
+                      </label>
+
+                  </div>
+
+              </div>
+
+            {% endfor %}
+
+          </div>
+
+          {% endfor %}
+
+        {% endif %}
+
+        <h3>Matriks Perbandingan</h3>
+        <table class="data-table compact">
+          <thead><tr><th></th>{% for c in codes %}<th>{{ c }}</th>{% endfor %}</tr></thead>
+          <tbody id="criteria-matrix-body">
+            {% for row in matrix %}<tr>{% for cell in row %}<td>{{ cell }}</td>{% endfor %}</tr>{% endfor %}
+          </tbody>
+        </table>
+        <p id="criteria-consistency"><b>Uji Konsistensi:</b> λmax={{ '%.4f'|format(lmax) }} | CI={{ '%.4f'|format(ci) }} | CR={{ '%.4f'|format(cr) }} <span class="muted">(Valid jika ≤ 0,10)</span></p>
+        <div class="actions-grid">
+        <button class="btn primary"
+                name="action"
+                value="save_matrix">
+            Simpan
+        </button>
+
+        <button class="btn success"
+                name="action"
+                value="save_next">
+            Simpan & Berikutnya →
+        </button>
+    </div>
+
+    {% endif %}
+
+{% endblock %}

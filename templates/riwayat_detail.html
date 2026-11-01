@@ -1,0 +1,259 @@
+{% extends "base.html" %}
+{% block title %}Detail Riwayat{% endblock %}
+{% block content %}
+<section class="card">
+  <h1>Detail Riwayat #{{ snap.id }}</h1>
+  <p><b>Waktu UTC:</b> {{ snap.ts }}</p>
+  <p><b>Aktivitas:</b> {{ snap.event }}</p>
+</section>
+
+<section class="card">
+  <h1>Hasil Analisis Prioritas Kontrol Keamanan</h1>
+  <p class="sub">Metode: Fuzzy AHP Chang dengan synthetic extent, defuzzifikasi centroid/COA, normalisasi, dan prioritas.</p>
+</section>
+
+<section class="card mt">
+
+<h2>Data Experts</h2>
+
+<table class="data-table">
+
+<thead>
+
+<tr>
+
+<th>No</th>
+
+<th>Nama</th>
+
+<th>Jabatan</th>
+
+<th>Instansi</th>
+
+</tr>
+
+</thead>
+
+<tbody>
+
+{% for e in snap.experts %}
+
+<tr>
+
+<td>{{ loop.index }}</td>
+
+<td>{{ e.nama }}</td>
+
+<td>{{ e.jabatan }}</td>
+
+<td>{{ e.instansi }}</td>
+
+</tr>
+
+{% endfor %}
+
+</tbody>
+
+</table>
+
+</section>
+
+<section class="card mt">
+  <h2>1. Perhitungan Kriteria</h2>
+  <h3>Matriks Perbandingan Kriteria (M)</h3>
+  <table class="data-table compact">
+    <thead><tr><th></th>{% for c in r.k_codes %}<th>{{ c }}</th>{% endfor %}</tr></thead>
+    <tbody>{% for row in matrix_table(r.M_k, r.k_codes, r.k_codes) %}<tr>{% for cell in row %}<td>{{ cell }}</td>{% endfor %}</tr>{% endfor %}</tbody>
+  </table>
+
+  <h3>Bobot Kriteria</h3>
+  <table class="data-table">
+    <thead><tr><th>Kode</th><th>Nama Kriteria</th><th>Bobot</th></tr></thead>
+    <tbody>
+      {% for k, w in zip(snap.kriteria, r.w_k) %}
+        <tr><td>{{ k.kode }}</td><td>{{ k.nama }}</td><td>{{ '%.6f'|format(w) }}</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <h3>Detail FAHP Chang + Defuzzifikasi Centroid</h3>
+  <table class="data-table">
+    <thead><tr><th>Kode</th><th>Row Sum (l,m,u)</th><th>S_i (l,m,u)</th><th>Centroid</th></tr></thead>
+    <tbody>
+      {% for i, code in enumerate(r.k_codes) %}
+        <tr>
+          <td>{{ code }}</td>
+          <td>{{ tfn_to_str(r.fuzzy_detail_k.row_sums[i]) }}</td>
+          <td>{{ tfn_to_str(r.fuzzy_detail_k.S[i]) }}</td>
+          <td>{{ '%.6f'|format(r.fuzzy_detail_k.centroid[i]) }}</td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  <p><b>Uji Konsistensi:</b> λmax={{ '%.4f'|format(r.CR_k.lambda_max) }} | CI={{ '%.4f'|format(r.CR_k.CI) }} | CR={{ '%.4f'|format(r.CR_k.CR) }}</p>
+</section>
+
+{% if snap.experts_count > 1 and r.gm_kriteria %}
+
+<h4>Penilaian Masing-masing Experts</h4>
+
+<table class="data-table">
+
+<thead>
+<tr>
+
+<th>Pair</th>
+
+{% for e in snap.experts %}
+<th>{{ e.nama }}</th>
+{% endfor %}
+
+<th>Geometric Mean</th>
+
+</tr>
+</thead>
+
+<tbody>
+
+{% for row in r.gm_kriteria %}
+
+<tr>
+
+<td>{{ row.pair }}</td>
+
+{% for n in row.experts %}
+<td>{{ n }}</td>
+{% endfor %}
+
+<td>{{ "%.4f"|format(row.gm) }}</td>
+
+</tr>
+
+{% endfor %}
+
+</tbody>
+
+</table>
+
+{% endif %}
+
+<section class="card mt">
+  <h2>2. Perhitungan Alternatif per Kriteria</h2>
+  {% for kcode in r.k_codes %}
+    <div class="result-block">
+      <h3>Kriteria {{ kcode }}</h3>
+      <h4>Matriks Alternatif</h4>
+      <table class="data-table compact">
+        <thead><tr><th></th>{% for c in r.a_codes %}<th>{{ c }}</th>{% endfor %}</tr></thead>
+        <tbody>{% for row in matrix_table(r.M_alt_per_k[kcode], r.a_codes, r.a_codes) %}<tr>{% for cell in row %}<td>{{ cell }}</td>{% endfor %}</tr>{% endfor %}</tbody>
+      </table>
+
+      <h4>Penilaian Expert</h4>
+            
+      <table class="data-table">
+
+      <thead>
+
+      <tr>
+
+      <th>Pair</th>
+
+      {% for e in snap.experts %}
+
+      <th>{{ e.nama }}</th>
+
+      {% endfor %}
+
+      <th>GM</th>
+
+      </tr>
+
+      </thead>
+
+      <tbody>
+
+      {% for row in r.gm_alternatif[kcode] %}
+
+      <tr>
+
+      <td>{{ row.pair }}</td>
+
+      {% for n in row.experts %}
+
+      <td>{{ n }}</td>
+
+      {% endfor %}
+
+      <td>
+
+      {{ "%.4f"|format(row.gm) }}
+
+      </td>
+
+      </tr>
+
+      {% endfor %}
+
+      </tbody>
+
+      </table>
+
+      <h4>Bobot Alternatif</h4>
+      <table class="data-table">
+        <thead><tr><th>Alternatif</th><th>Bobot</th></tr></thead>
+        <tbody>
+          {% for alt, w in zip(snap.alternatif, r.w_alt_per_k[kcode]) %}
+            <tr><td>{{ alt.nama }}</td><td>{{ '%.6f'|format(w) }}</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+
+      <h4>Detail FAHP</h4>
+      <table class="data-table">
+        <thead><tr><th>Kode Alt</th><th>Row Sum (l,m,u)</th><th>S_i (l,m,u)</th><th>Centroid</th></tr></thead>
+        <tbody>
+          {% for i, acode in enumerate(r.a_codes) %}
+            <tr>
+              <td>{{ acode }}</td>
+              <td>{{ tfn_to_str(r.fuzzy_detail_alt[kcode].row_sums[i]) }}</td>
+              <td>{{ tfn_to_str(r.fuzzy_detail_alt[kcode].S[i]) }}</td>
+              <td>{{ '%.6f'|format(r.fuzzy_detail_alt[kcode].centroid[i]) }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      <p><b>Uji Konsistensi:</b> λmax={{ '%.4f'|format(r.CR_alt[kcode].lambda_max) }} | CI={{ '%.4f'|format(r.CR_alt[kcode].CI) }} | CR={{ '%.4f'|format(r.CR_alt[kcode].CR) }}</p>
+    </div>
+  {% endfor %}
+</section>
+
+<section class="card mt">
+  <h2>3. Sintesis Bobot Global</h2>
+  <table class="data-table">
+    <thead><tr><th>Rank</th><th>Nama Alternatif</th><th>Bobot Global</th><th>Prioritas Kontrol</th></tr></thead>
+    <tbody>
+      {% for rank, idx in enumerate(r.order, start=1) %}
+        <tr>
+          <td>{{ rank }}</td>
+          <td>{{ snap.alternatif[idx].nama }}</td>
+          <td>{{ '%.6f'|format(r.W[idx]) }}</td>
+          <td>{{ r.priority_level[idx] }}</td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <h3>Visual Bobot Global</h3>
+  {% for rank, idx in enumerate(r.order, start=1) %}
+    {% set pct = r.W[idx] * 100 %}
+    <div class="bar-label"><b>{{ rank }}. {{ snap.alternatif[idx].nama }}</b> — {{ '%.4f'|format(r.W[idx]) }} ({{ '%.1f'|format(pct) }}%)</div>
+    <div class="bar-wrap"><div class="bar-fill" style="width: {{ pct }}% "></div></div>
+  {% endfor %}
+
+  <p class="recommendation"><b>Rekomendasi Sistem:</b> {{ r.sistem_recommendation }}</p>
+  <div class="actions-grid">
+  <a class="btn primary" href="{{ url_for('riwayat_pdf', hist_id=snap.id) }}">Unduh Laporan PDF</a>
+  <a class="btn"href="{{ url_for('riwayat') }}">Kembali</a>
+  </div>
+</section>
+{% endblock %}
