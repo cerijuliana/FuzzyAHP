@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Aplikasi SPK Fuzzy AHP Flask
 
 Versi ini menggunakan Flask, bukan Streamlit. Fitur utama:
@@ -30,3 +31,6 @@ http://127.0.0.1:5000
 ```
 
 Jika tampilan belum berubah, tekan `Ctrl + F5` di browser untuk hard refresh.
+=======
+# FuzzyAHP
+>>>>>>> 2708f7f442ec8b01d5ff74646af94a69e067af1d
